@@ -1,46 +1,48 @@
 import json
-import tkinter as tk
+from tkinter import *
 import threading
-
+import tkinter.messagebox as messagebox
+from view import chat_view
 from sockets import client_socket
 
-class views:
+class views(object):
     window:''           # 窗口
     username:''         # 用户名
     password:''         # 密码
-    def __init__(self):
-        self.window = tk.Tk()
-        self.draw()             # 绘制窗口
-        self.window.mainloop()
-    def draw(self):
+    page:''
+    def __init__(self,master=None,socket=None):
+        self.socket=socket
+        self.window = master
         self.window.title("登录")
-        self.window.geometry('600x400')
-        self.window.resizable(0, 0)
-        # 用户名、密码标签
-        tk.Label(self.window, text='用户名: ').place(x=130, y=190)
-        tk.Label(self.window, text='密码: ').place(x=130, y=230)
-        # 用户名、密码输入框
-        entry_usr_name=tk.StringVar()
-        self.username = tk.Entry(self.window, textvariable=entry_usr_name)
-        entry_usr_name.get()
-        entry_usr_pwd=tk.StringVar()
-        self.password = tk.Entry(self.window, textvariable=entry_usr_pwd, show='*')
-        self.username.place(x=220, y=190)
-        self.password.place(x=220, y=230)
-        # 登录按钮
-        btn_login = tk.Button(self.window, text='登录',command=self.login)
-        btn_login.place(x=250, y=290)
+        self.username = StringVar()
+        self.password = StringVar()
+        self.window.geometry('%dx%d' % (300, 180))
+        self.draw()             # 绘制窗口
+
+    def draw(self):
+        self.page = Frame(self.window)  # 创建Frame
+        self.page.pack()
+        # 用户名标签、输入框
+        Label(self.page, text='用户名: ').grid(row=1,stick=W,pady=10)
+        Entry(self.page, textvariable=self.username).grid(row=1, column=1, stick=E)
+        # 密码标签、输入框
+        Label(self.page, text='密码: ').grid(row=2,stick=W,pady=10)
+        Entry(self.page, textvariable=self.password,show='*').grid(row=2, column=1, stick=E)
+        # 按钮
+        Button(self.page, text='登录', command=self.login).grid(row=3,column=2, stick=E, pady=10)
+
     def login(self):        # 登录
         msg={'method':'login','username':self.username.get(),'password':self.password.get()}
-        s=client_socket.client_socket()
+        print(msg)
+        s=self.socket
         recive=s.send(json.dumps(msg))
         print(recive)
         if recive == 'null':
-            threading.local().user=recive
-            print("if")
+            messagebox.showinfo('提示', '用户名密码错误，请重试')
         else:
-            print("else")
-            self.window.messagebox.showinfo('提示', '用户名密码错误，请重试')
-
+            print("登录成功！")
+            threading.local().user=recive
+            self.page.destroy()
+            chat_view.views(self.window,self.socket)
 
 
