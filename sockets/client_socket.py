@@ -7,6 +7,7 @@ class conn:
 
     def __init__(self):
         self.isConnect = False
+        self.connect()
 
     def connect(self):
         if not self.isConnect:

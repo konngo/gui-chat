@@ -5,7 +5,7 @@ class db:
     conn:''     # 数据库连接
 
     def __init__(self):
-        self.conn = sqlite3.connect("chat.db")
+        self.conn = sqlite3.connect("chat.db",check_same_thread = False)
         self.cursor = self.conn.cursor()
         # 如果不存在用户表则创建用户表
         sql = "create table if not exists users (id integer primary key autoincrement,username varchar(30),password varchar(30))"

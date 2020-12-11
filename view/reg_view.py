@@ -2,8 +2,8 @@ import json
 from tkinter import *
 import threading
 import tkinter.messagebox as messagebox
-from view import chat_view, reg_view
-from sockets import client_socket
+from view import chat_view, login_view
+
 
 class views(object):
     window:''           # 窗口
@@ -13,7 +13,7 @@ class views(object):
     def __init__(self,master=None,socket=None):
         self.socket=socket
         self.window = master
-        self.window.title("登录")
+        self.window.title("注册")
         self.username = StringVar()
         self.password = StringVar()
         self.window.geometry('%dx%d' % (300, 180))
@@ -29,26 +29,27 @@ class views(object):
         Label(self.page, text='密码: ').grid(row=2,stick=W,pady=10)
         Entry(self.page, textvariable=self.password,show='*').grid(row=2, column=1, stick=E)
         # 按钮
-        Button(self.page, text='登录', command=self.login).grid(row=3,column=2, stick=E, pady=10)
-        Button(self.page, text='注册', command=self.reg).grid(row=3,column=1, stick=E, pady=10)
+        Button(self.page, text='注册', command=self.reg).grid(row=3,column=2, stick=E, pady=10)
+        Button(self.page, text='去登录', command=self.login).grid(row=3,column=1, stick=E, pady=10)
 
-    def reg(self):          # 注册
-        self.page.destroy()
-        reg_view.views(self.window, self.socket)
+    def login(self):          # 注册
+        self.page.destroy()     # 清空当前页面
+        login_view.views(self.window, self.socket)
 
-    def login(self):        # 登录
-        msg={'method':'login','username':self.username.get(),'password':self.password.get()}
+    def reg(self):        # 注册
+        msg={'method':'reg','username':self.username.get(),'password':self.password.get()}
         msg=json.dumps(msg)
         self.socket.tcpCliSock.send(msg.encode())
         recive=self.socket.tcpCliSock.recv(1024).decode()
         print(recive)
         arr=json.loads(recive)
         if arr['msg'] == None:
-            messagebox.showinfo('提示', '用户名密码错误，请重试')
+            messagebox.showinfo('提示', '注册失败，请重试')
         else:
-            print("登录成功！")
-            threading.local().user=arr
+            print("注册成功！")
+            messagebox.showinfo('提示', '注册成功，请登录')
+            # threading.local().user=arr
             self.page.destroy()
-            chat_view.views(self.window,self.socket)
+            login_view.views(self.window,self.socket)
 
 

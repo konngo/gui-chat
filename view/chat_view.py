@@ -19,8 +19,8 @@ class views(object):
         self.window.title("聊天窗口")
         self.window.geometry('%dx%d' % (600, 400))
         self.draw()             # 绘制窗口
-        # 开启线程
         self.listenThread = self.listen_thread(self.socket, self)
+        self.listenThread.start()
 
     class listen_thread(threading.Thread):
         """Socket监听线程，对收到的信息作出相应反馈"""
@@ -30,13 +30,23 @@ class views(object):
             self.socket = socket
 
         def run(self):
+            print("开启监听服务器信息")
+            msg={'method':'send','msg':'已经连接到服务器'}
+            msg = json.dumps(msg)
+            self.socket.tcpCliSock.send(msg.encode())
             while True:
-                try:
-                    jData = self.socket.recv(1024)
-                    data = json.loads(jData)
-                except:
-                    break
-                print ("__receive__" + jData)
+                recive = self.socket.tcpCliSock.recv(1024).decode()
+                if recive is None: continue
+                data = json.loads(recive)
+                print("接收消息:",recive)
+                if data['method'] == 'recive':
+                    self.master.content.insert(END, data['msg'])
+                    # 消息框到最下
+                    self.master.content.see(END)
+            self.socket.dis_connect()
+
+
+
 
     def draw(self):
         self.page = Frame(self.window)  # 创建Frame
@@ -50,16 +60,17 @@ class views(object):
         self.content.config(yscrollcommand = sc.set)
         sc['command'] = self.content.yview()
         # 消息框插入
-
-        self.content.insert(END,'晴明落地犹惆怅8，何况飘零泥土中。:\n\n')
+        # self.content.insert(END,'晴明落地犹惆怅8，何况飘零泥土中。:\n\n')
 
         self.send=Text(self.page,height =7)
         self.send.grid(row=1, column=0)
         Button(self.page, text='发送', command=self.sendMsg).grid(row=2,column=0)
 
+
     def sendMsg(self):
-        msg = {'method': 'send', 'msg':self.send.get('1.0',END)}
-        self.socket.tcpCliSock.send(json.dumps(msg).encode())
-        self.send.setvar("")
-        # 消息框到最下
-        # self.content.see(END)
+        # self.socket = client_socket.conn()
+        msg = {'method': 'send', 'msg': self.send.get('1.0', END)}
+        msg = json.dumps(msg)
+        print("发送消息：" + msg)
+        self.socket.tcpCliSock.send(msg.encode())
+        self.send.delete('1.0', 'end')
